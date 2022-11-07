@@ -44,7 +44,7 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az webapp config storage-account add -g $(RESOURCE_GROUP_NAME) -n $(FUNCTION_NAME) \
+      az webapp config storage-account update -g $(RESOURCE_GROUP_NAME) -n $(FUNCTION_NAME) \
       --custom-id $(FUNCTION_NAME) \
       --storage-type AzureFiles \
       --account-name $(STORAGE_ACCOUNT_NAME) \
