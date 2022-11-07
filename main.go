@@ -5,17 +5,23 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 )
 
 func httpTriggerHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("X-Forwarded-For") != "" {
-		w.Write([]byte(strings.Split(r.Header.Get("X-Forwarded-For"), ":")[0]))
-	} else if r.Header.Get("Host") != "" {
-		w.Write([]byte(strings.Split(r.Header.Get("Host"), ":")[0]))
-	} else if r.RemoteAddr != "" {
-		w.Write([]byte(strings.Split(r.RemoteAddr, ":")[0]))
+
+	fmt.Print("Finding mounted file!")
+	fPath, ok := os.LookupEnv("CONFIG_PATH")
+
+	if !ok {
+		w.WriteHeader(http.StatusNotFound)
 	}
+	content, err := os.ReadFile(fPath)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	w.Write(content)
 }
 
 func main() {
@@ -24,9 +30,14 @@ func main() {
 	httpInvokerPort, exists := os.LookupEnv("FUNCTIONS_HTTPWORKER_PORT")
 	if exists {
 		fmt.Println("FUNCTIONS_HTTPWORKER_PORT: " + httpInvokerPort)
+	} else {
+		httpInvokerPort = "3000"
 	}
-	mux := http.NewServeMux()
-	mux.HandleFunc("/foo", httpTriggerHandler)
+	http.HandleFunc("/foo", httpTriggerHandler)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte("ok"))
+	})
 	log.Println("Go server Listening...on httpInvokerPort:", httpInvokerPort)
-	log.Fatal(http.ListenAndServe(":"+httpInvokerPort, mux))
+	log.Fatal(http.ListenAndServe(":"+httpInvokerPort, nil))
 }
