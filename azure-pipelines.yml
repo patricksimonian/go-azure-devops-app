@@ -9,31 +9,38 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-variables:
-  GOBIN:  '$(GOPATH)/bin' # Go binaries path
-  GOROOT: '/usr/local/go1.11' # Go installation path
-  GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
-  modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
 
 steps:
-- script: |
-    mkdir -p '$(GOBIN)'
-    mkdir -p '$(GOPATH)/pkg'
-    mkdir -p '$(modulePath)'
-    shopt -s extglob
-    shopt -s dotglob
-    mv !(gopath) '$(modulePath)'
-    echo '##vso[task.prependpath]$(GOBIN)'
-    echo '##vso[task.prependpath]$(GOROOT)/bin'
-  displayName: 'Set up the Go workspace'
 
-- script: |
-    go version
-    go get -v -t -d ./...
-    if [ -f Gopkg.toml ]; then
-        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-        dep ensure
-    fi
-    go build -v .
-  workingDirectory: '$(modulePath)'
+- task: Go@0
+  inputs:
+    command: 'get'
   displayName: 'Get dependencies, then build'
+
+- task: Go@0
+  inputs:
+    command: 'build'
+    arguments: '-o main'
+  displayName: 'build go project'
+
+- bash: |
+    mkdir function
+    cp host.json function/
+    cp -R foo function/
+    cp main function/
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: './function'
+    includeRootFolder: true
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    replaceExistingArchive: true
+    verbose: true
+- bash: ls -l .
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'Azure subscription 1(96f7d97d-4572-4105-afe7-7a03a7a8f3a3)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: 'az help'
