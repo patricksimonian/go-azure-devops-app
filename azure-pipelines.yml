@@ -51,3 +51,13 @@ steps:
       --share-name $(FILESHARE_NAME) \
       --access-key $(STORAGE_ACCOUNT_ACCESS_KEY) \
       --mount-path /var/opt
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'Azure subscription 1(96f7d97d-4572-4105-afe7-7a03a7a8f3a3)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az functionapp config appsettings set \
+      --name $(FUNCTION_NAME) \
+      --resource-group $(RESOURCE_GROUP_NAME) \
+      --settings "CONFIG_PATH=/var/opt/foo.json"
