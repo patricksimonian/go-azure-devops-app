@@ -43,4 +43,11 @@ steps:
     azureSubscription: 'Azure subscription 1(96f7d97d-4572-4105-afe7-7a03a7a8f3a3)'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
-    inlineScript: 'az help'
+    inlineScript: |
+      az webapp config storage-account add -g $(RESOURCE_GROUP_NAME) -n $(FUNCTION_NAME) \
+      --custom-id $(FUNCTION_NAME) \
+      --storage-type AzureFiles \
+      --account-name $(STORAGE_ACCOUNT_NAME) \
+      --share-name $(FILESHARE_NAME) \
+      --access-key $(STORAGE_ACCOUNT_ACCESS_KEY) \
+      --mount-path /var/opt
