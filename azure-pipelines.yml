@@ -23,17 +23,21 @@ steps:
     arguments: '-o main'
   displayName: 'build go project'
 
-- bash: ls -l .
-- bash: ls -l '$(Build.BinariesDirectory)'
+- bash: |
+    mkdir function
+    cp host.json function/
+    cp -R foo function/
+    cp main function/
+
 - task: ArchiveFiles@2
   inputs:
-    rootFolderOrFile: '.'
+    rootFolderOrFile: './function'
     includeRootFolder: true
     archiveType: 'zip'
     archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
     replaceExistingArchive: true
     verbose: true
-
+- bash: ls -l .
 - task: AzureCLI@2
   inputs:
     azureSubscription: 'Azure subscription 1(96f7d97d-4572-4105-afe7-7a03a7a8f3a3)'
